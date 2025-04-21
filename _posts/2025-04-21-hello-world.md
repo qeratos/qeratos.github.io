@@ -6,3 +6,5 @@ tags: [hello, english]
 ---
 
 This is your first English post using the Chirpy theme!
+
+![TEST](assets/img/hello-world/kapi.jpeg)
