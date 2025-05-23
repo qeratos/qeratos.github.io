@@ -2,7 +2,7 @@
 title: "Скрытый PEB. Или напоминалка для реверсера."
 author: Qeratos
 date: 2025-05-23 10:00:00 +0300
-categories: [Research]
+categories: [Research, PEB]
 tags: [Research, Malware, WINAPI, ru]
 ---
 
