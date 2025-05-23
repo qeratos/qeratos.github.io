@@ -31,11 +31,11 @@ ret
 | char InheritedAddressSpace    | `00`           | `00`           |            |
 | char ReadImageFileExecOptions | `01`           | `01`           |            |
 | DWORD Mutant                  | `04`           | `08`           |            |
-| DWORD ==ImageBaseAddress==    | `08`           | `10`           |            |
-| _PEB_LDR_DATA* ==LoaderData== | `0C`           | `18`           |            |
+| DWORD ImageBaseAddress    | `08`           | `10`           |            |
+| _PEB_LDR_DATA* LoaderData | `0C`           | `18`           |            |
 | DWORD ProcessParameters       | `10`           | `20`           |            |
 | DWORD SubSystemData           | `14`           | `28`           |            |
-| DWORD ==ProcessHeap==         | `18`           | `30`           |            |
+| DWORD ProcessHeap         | `18`           | `30`           |            |
 | DWORD FastPebLock             | `1C`           | `38`           |            |
 | DWORD FastPebLockRoutine      | `20`           | `40`           |            |
 | DWORD FastPebUnlockRoutine    | `24`           | `48`           |            |
@@ -47,7 +47,7 @@ ret
 | DWORD TlsExpansionCounter     | `3C`           | `70`           |            |
 | DWORD TlsBitmap               | `40`           | `78`           |            |
 | DWORD TlsBitmapBits[0x2]      | `44`           | `80`           |            |
-| ULONG ==NumberOfProcessors==  | `64`           | `B8`           |            |
+| ULONG NumberOfProcessors  | `64`           | `B8`           |            |
 | DWORD NumberOfHeaps           | `88`           | `e8`           |            |
 | DWORD MaximumNumberOfHeaps    | `8C`           | `ec`           |            |
 | DWORD ProcessHeaps            | `90`           | `f0`           |            |
@@ -63,7 +63,7 @@ ret
 | DWORD threadId                      | `24`           |                |            |
 | DWORD ActiveRpcInfo                 | `28`           | `50`           |            |
 | DWORD ThreadLocalStoragePointer     | `2C`           | `58`           |            |
-| ==PEB* Peb==                        | ==30==         | `60`           |            |
+| PEB* Peb                            | `30`           | `60`           |            |
 | DWORD LastErrorValue                | `34`           | `68`           |            |
 | DWORD CountOfOwnedCriticalSections; | `38`           | `6C`           |            |
 | DWORD CsrClientThread               | `3C`           | `70`           |            |
@@ -111,7 +111,7 @@ ret
 1) Первое интересное для нас поле это ==ImageBaseAddress==, указывает на реальный адрес по которому загружен наш экземпляр. Злоумышленники могут применять методики инжектирования или патчинга файлов для изменения текущего экземпляра или его заголовков.
 2) Также очень "вкусным" для злоумышленников является поле ==BeingDebugged==, находящееся по смещению 0x2 в PEB, а которое устанавливается флаг при подключенному к процессу отладчику. Если флаг равен 1 - значит отладчик подключен. 
 3) Почти в самом конце затаился указатель на количество ядер нашего процессора, поле с наименованием ==NumberOfProcessors==, что может помочь злоумышленникам проводить проверку на запуск в контролируемой среде. 
- ![NumberOfProcessors](assets/post_img/hidden_peb/numb_of_cpu.png)
+![NumberOfProcessors](assets/post_img/hidden_peb/numb_of_cpu.png)
  
 4) И также можно выделить, что в стурктуре имеется указатель на хип, т.е. нам не обязательно вызвать метод GetProcessHeap() для каких-либо действий с ним. ==ProcessHeaps==
 5) Сразу же взгляд цепляется за указатель на структуру с интересным именем ==# PEB_LDR_DATA== , в которой содержится информация о модулях юзерспейса, загруженных процессом. Устроена она по-своему интересно.
@@ -134,9 +134,9 @@ ret
 | HANDLE ShutdownThreadId                    | 0x2C           | 0x50           |
 
 
-> ==InLoadOrderModuleList== - хранит в себе следующий модуль согласно порядку загрузки;
-   ==InMemoryOrderModuleList== - хранит в себе следующий модуль согласно порядку расположения в памяти;
-   ==InInitializationOrderModuleList== хранит в себе следующий модуль согласно порядку инициализации;
+> **InLoadOrderModuleList** - хранит в себе следующий модуль согласно порядку загрузки;
+   **InMemoryOrderModuleList** - хранит в себе следующий модуль согласно порядку расположения в памяти;
+   **InInitializationOrderModuleList** хранит в себе следующий модуль согласно порядку инициализации;
 
 
 ---
@@ -147,29 +147,29 @@ ret
 | LIST_ENTRY InLoadOrderLinks             | 0x00           | 0x00           |
 | LIST_ENTRY InMemoryOrderLinks           | 0x08           | 0x10           |
 | LIST_ENTRY InInitializationOrderLinks   | 0x10           | 0x20           |
-| PVOID ==DllBase==                       | 0x18           | 0x30           |
-| PVOID ==EntryPoint==                    | 0x1C           | 0x38           |
-| ULONG ==SizeOfImage==                   | 0x20           | 0x40           |
-| UNICODE_STRING ==FullDllName==          | 0x24           | 0x48           |
-| UNICODE_STRING ==BaseDllName==          | 0x2C           | 0x58           |
+| PVOID DllBase                       | 0x18           | 0x30           |
+| PVOID EntryPoint                    | 0x1C           | 0x38           |
+| ULONG SizeOfImage                  | 0x20           | 0x40           |
+| UNICODE_STRING FullDllName         | 0x24           | 0x48           |
+| UNICODE_STRING BaseDllName         | 0x2C           | 0x58           |
 | ULONG Flags                             | 0x34           | 0x68           |
 | USHORT LoadCount                        | 0x38           | 0x6C           |
 | USHORT TlsIndex                         | 0x3A           | 0x6E           |
 | LIST_ENTRY HashLinks                    | 0x3C           | 0x70           |
 | ULONG TimeDateStamp                     | 0x44           | 0x80           |
-| PVOID PatchInformation;                 | 0x4C           | 0x90           |
-| LDR_DDAG_NODE*DdagNode;                 | 0x50           | 0x98           |
-| LIST_ENTRY NodeModuleLink;              | 0x54           | 0xA0           |
-| LDRP_DLL_SNAP_CONTEXT *SnapContext;     | 0x5C           | 0xB0           |
-| PVOID ==ParentDllBase==;                | 0x60           | 0xB8           |
-| PVOID SwitchBackContext;                | 0x64           | 0xC0           |
-| RTL_BALANCED_NODE BaseAddressIndexNode; | 0x68           | 0xC8           |
-| RTL_BALANCED_NODE MappingInfoIndexNode; | 0x74           | 0xE0           |
+| PVOID PatchInformation                 | 0x4C           | 0x90           |
+| LDR_DDAG_NODE*DdagNode                | 0x50           | 0x98           |
+| LIST_ENTRY NodeModuleLink             | 0x54           | 0xA0           |
+| LDRP_DLL_SNAP_CONTEXT *SnapContext     | 0x5C           | 0xB0           |
+| PVOID ParentDllBase                | 0x60           | 0xB8           |
+| PVOID SwitchBackContext                | 0x64           | 0xC0           |
+| RTL_BALANCED_NODE BaseAddressIndexNode  | 0x68           | 0xC8           |
+| RTL_BALANCED_NODE MappingInfoIndexNode  | 0x74           | 0xE0           |
 | ULONG BaseNameHashValue;                | 0x90           | 0x0108         |
-| LDR_DLL_LOAD_REASON ==LoadReason==;     | 0x94           | 0x010C         |
-| ULONG ImplicitPathOptions;              | 0x98           | 0x0110         |
-| ULONG ReferenceCount;                   | 0x9C           | 0x0114         |
-| ULONG DependentLoadFlags;               | 0xA0           | 0x0118         |
+| LDR_DLL_LOAD_REASON LoadReason     | 0x94           | 0x010C         |
+| ULONG ImplicitPathOptions              | 0x98           | 0x0110         |
+| ULONG ReferenceCount                   | 0x9C           | 0x0114         |
+| ULONG DependentLoadFlags              | 0xA0           | 0x0118         |
 | SE_SIGNING_LEVEL SigningLevel;          | 0xA4           | 0x011C         |
 
 Трудно согласится, но в этой структуре так же есть интересные для нас поля, (выделены).
@@ -184,19 +184,19 @@ ret
 ___
 Рассмотрим подробнее и реализуем такой функционал(пример под x64):
 1) Получаем адрес PEB исходя из нашей разрядности:
-```assembly
+```
 mov rax, [gs:0x60]           ; PEB
 mov [rel peb], rax           ; Save to variable
 ```
 
 2) Далее нам необходимо получить адрес структуры PEB_LDR_DATA и первого модуля согласно списку загрузки:
-```assembly
+```
 mov rax, [rax + 0x18]        ; PEB_LDR_DATA
 mov rsi, [rax + 0x10]        ; InLoadOrderModuleList | _LDR_DATA_TABLE_ENTRY
 ```
 
 3) Запускаем парсинг, при условии нахождения нужной нам библиотеки, ищем по полю BaseDllName, по смещению 0x58, если же не нашлось такой библиотеки, а мы прошли по всему списку - выходим: 
-```assembly
+```
 .modules_loop:
 	mov rbx, [rsi + 0x30]        ; 0x30 DllBase
 
@@ -231,7 +231,7 @@ mov rsi, [rax + 0x10]        ; InLoadOrderModuleList | _LDR_DATA_TABLE_ENTRY
 ```
 
 4) Начнем с парсинга PE заголовка найденной библиотеки, нас интересуют смещение EXPORT_DIRECTORY_RVA, нам интересны также поля NumberOfFunctions, для ограничения итерации, а так же ссылки на адреса имен функций и на сами функции. После чего итерируемся, сверяем имя, если совпало, получаем адрес функции (указатель на функции + (размер * номер нужной функции)).
-```assembly
+```
 push rbp
     mov rbp, rsp
 
